@@ -46,7 +46,7 @@ def main(args):
     val_loader = DataLoader(val_set, batch_size=32, shuffle=False, num_workers=4)
 
 
-    model = Unet(num_classes=37, bilinear=True, dropout=0)
+    model = Unet(num_classes=3, bilinear=True, dropout=0)
 
     model.apply(weights_init_kaiming)
     wand_logger = WandbLogger(project='Equivariant-Unet')

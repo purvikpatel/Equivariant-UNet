@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --time=07:59:59
-#SBATCH --job-name=d4resnet18
+#SBATCH --job-name=unet
 #SBATCH --mem=64GB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
