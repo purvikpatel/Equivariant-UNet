@@ -37,7 +37,7 @@ def main(args):
         transforms.Resize((240, 240)),
         transforms.ToTensor(),
     ])
-    dataset = OxfordIIITPet(root='../../data/',download=True, target_types='segmentation',
+    dataset = OxfordIIITPet(root='/home/patel.purvi/data/',download=True, target_types='segmentation',
                                      transform=image_transform, target_transform=target_transform) 
     train_len = int(len(dataset)*0.8)
     val_len = len(dataset) - train_len
@@ -63,7 +63,7 @@ def main(args):
     )
 
     
-    trainer = Trainer(accelerator='cpu', max_epochs=50, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback])
+    trainer = Trainer(accelerator='auto', max_epochs=50, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback])
     trainer.fit(model, train_loader, val_loader)
 
 
