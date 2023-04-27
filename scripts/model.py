@@ -87,8 +87,8 @@ class Unet(pl.LightningModule):
         y =y.squeeze(1)
         y = y.long()
         y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y, reduction='none')
-        self.log('train_loss', loss/batch.shape[0])
+        loss = F.cross_entropy(y_hat, y)
+        self.log('train_loss', loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -98,8 +98,8 @@ class Unet(pl.LightningModule):
         y = y.long()
         y_hat = self(x)
 
-        loss = F.cross_entropy(y_hat, y,reduction='none')
-        self.log('val_loss', loss/batch.shape[0])
+        loss = F.cross_entropy(y_hat, y)
+        self.log('val_loss', loss)
         return loss
 
     
