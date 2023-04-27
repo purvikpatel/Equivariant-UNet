@@ -83,27 +83,28 @@ class Unet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         
         x, y = batch
+        y = y - 1
         y =y.squeeze(1)
         y = y.long()
         y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y)
+        loss = F.cross_entropy(y_hat, y, reduction='none')
         self.log('train_loss', loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        #y = 3 * y -1
+        y = y -1
         y =y.squeeze(1)
         y = y.long()
         y_hat = self(x)
 
-        loss = F.cross_entropy(y_hat, y)
+        loss = F.cross_entropy(y_hat, y,reduction='none')
         self.log('val_loss', loss)
         return loss
 
     
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=1e-3, weight_decay=1e-5)
+        return optim.AdamW(self.parameters(), lr=1e-3)
     
     
     
