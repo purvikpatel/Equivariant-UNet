@@ -6,7 +6,7 @@ def compute_metrics(y_pred, y_target):
     y_pred = F.softmax(y_pred, dim=1)
     y_pred = torch.argmax(y_pred, dim=1)
 
-    y_target = y_target.squeeze(1)
+    #y_target = y_target.squeeze(1)
     batch_size = y_pred.shape[0]
     num_classes = 3
     class_wise_iou = torch.zeros(num_classes)

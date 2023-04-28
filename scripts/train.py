@@ -14,6 +14,7 @@ from torchvision import transforms
 from torchvision.datasets import OxfordIIITPet
 import torch.nn as nn
 from torch.nn import init
+from lightning.pytorch import seed_everything
 
 
 def weights_init_kaiming(m):
@@ -35,7 +36,7 @@ def main(args):
     ])
     target_transform = transforms.Compose([
         transforms.Resize((240, 240)),
-        transforms.ToTensor(),
+        transforms.PILToTensor()
     ])
     dataset = OxfordIIITPet(root='../../data/',download=True, target_types='segmentation',
                                      transform=image_transform, target_transform=target_transform) 
@@ -54,6 +55,11 @@ def main(args):
     checkpoint_callback = ModelCheckpoint(
         dirpath=os.path.join(args.log_dir, 'checkpoints'),
         verbose=True,
+        save_top_k=2,
+        monitor="val_loss",
+        mode="min",
+        save_on_train_epoch_end=True,
+        auto_insert_metric_name=True
     )
     stop_callback = EarlyStopping(
         monitor='val_loss',
@@ -63,7 +69,7 @@ def main(args):
     )
 
     
-    trainer = Trainer(accelerator='auto', max_epochs=40, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback])
+    trainer = Trainer(accelerator='auto', max_epochs=40, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback], deterministic=True)
     trainer.fit(model, train_loader, val_loader)
 
 
@@ -75,5 +81,5 @@ if __name__ ==  '__main__':
     
     args = arg.parse_args()
     print(args.log_dir)
-    
+    seed_everything(42, workers=True)
     main(args)
