@@ -2,6 +2,7 @@ from torch import nn, optim, utils, Tensor
 from torch.nn import functional as F
 
 import lightning.pytorch as pl
+import torchmetrics.functional as metrics
 
 import torch
 
@@ -83,25 +84,25 @@ class Unet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         
         x, y = batch
-        y = y - 1
+        y = 3 * y - 1
         y =y.squeeze(1)
         y = y.long()
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss,on_step=True, on_epoch=False, prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y = y -1
+        y = 3 * y -1
         y =y.squeeze(1)
         y = y.long()
         y_hat = self(x)
 
         loss = F.cross_entropy(y_hat, y)
-        self.log('val_loss', loss)
-        return loss
-
+        iou =  metrics.classification.multiclass_jaccard_index(y_hat, y,num_classes=3,ignore_index=1)
+        self.log('val_loss', loss, on_step=True, on_epoch=True)
+        self.log('val_iou', iou, on_step=True, on_epoch=True)
     
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=1e-3)

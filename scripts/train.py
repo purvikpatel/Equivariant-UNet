@@ -42,11 +42,11 @@ def main(args):
     train_len = int(len(dataset)*0.8)
     val_len = len(dataset) - train_len
     train_set, val_set = random_split(dataset, [train_len, val_len])
-    train_loader = DataLoader(train_set, batch_size=32, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_set, batch_size=32, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_set, batch_size=8, shuffle=False, num_workers=4)
 
 
-    model = Unet(num_classes=3, bilinear=True, dropout=0)
+    model = Unet(num_classes=3, bilinear=True, dropout=0.4)
 
     model.apply(weights_init_kaiming)
     wand_logger = WandbLogger(project='Equivariant-Unet')
@@ -63,7 +63,7 @@ def main(args):
     )
 
     
-    trainer = Trainer(accelerator='auto', max_epochs=50, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback])
+    trainer = Trainer(accelerator='auto', max_epochs=40, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback])
     trainer.fit(model, train_loader, val_loader)
 
 
