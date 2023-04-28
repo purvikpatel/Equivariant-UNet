@@ -37,7 +37,7 @@ def main(args):
         transforms.Resize((240, 240)),
         transforms.ToTensor(),
     ])
-    dataset = OxfordIIITPet(root='/home/patel.purvi/data/',download=True, target_types='segmentation',
+    dataset = OxfordIIITPet(root='../../data/',download=True, target_types='segmentation',
                                      transform=image_transform, target_transform=target_transform) 
     train_len = int(len(dataset)*0.8)
     val_len = len(dataset) - train_len

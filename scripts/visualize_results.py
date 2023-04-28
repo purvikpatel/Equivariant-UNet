@@ -7,7 +7,7 @@ import lightning.pytorch as pl
 from model import Unet
 from torchvision import transforms
 from torchvision.datasets import OxfordIIITPet
-
+from torch.nn import functional as F
 
 def main(args):
     model = Unet.load_from_checkpoint(args.model_path)
@@ -25,11 +25,11 @@ def main(args):
                                      transform=image_transform, target_transform=target_transform) 
     
     output = model(dataset[123][0].unsqueeze(0))
-    print(output[0,:,0,0])
-    #output = torch.softmax(output, dim=1)
+    
+    output = F.softmax(output, dim=1)
     output = torch.argmax(output, dim=1)
     output = output.squeeze().detach().cpu().numpy()
-    print(output)
+
 
     fig, ax = plt.subplots(1, 3, figsize=(10, 5))
     ax[0].imshow(dataset[123][0].permute(1, 2, 0))
