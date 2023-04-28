@@ -24,64 +24,63 @@ def main(args):
     ])
     target_transform = transforms.Compose([
         transforms.Resize((240, 240)),
-        transforms.ToTensor(),
+        transforms.PILToTensor()
     ])
     dataset = OxfordIIITPet(root='../../data',download=True, target_types='segmentation',
                                      transform=image_transform, target_transform=target_transform)
 
+
+    # val = 100
+    # train = len(dataset) - val
+    # train_set, val_set = random_split(dataset, [train, val])
+
+    # dataloader = DataLoader(val_set, batch_size=8, shuffle=True, num_workers=4)
+
+    # ious_class1 = []
+    # ious_class2 = []
+    # ious_class3 = []
+    # dices_class1 = []
+    # dices_class2 = []
+    # dices_class3 = []
+
+    # for i, (x, y) in enumerate(dataloader):
+    #     print(f'Batch {i+1}')
+    #     y = y - 1
+    #     y = y.squeeze(1)
+    #     output = model(x)
+    #     ious, dices = compute_metrics(output, y)
+    #     ious_class1.append(ious[0])
+    #     ious_class2.append(ious[1])
+    #     ious_class3.append(ious[2])
+    #     dices_class1.append(dices[0])
+    #     dices_class2.append(dices[1])
+    #     dices_class3.append(dices[2])
+
+    # iou_1 = torch.stack(ious_class1).mean()
+    # iou_2 = torch.stack(ious_class2).mean()
+    # iou_3 = torch.stack(ious_class3).mean()
+    # dice_1 = torch.stack(dices_class1).mean()
+    # dice_2 = torch.stack(dices_class2).mean()
+    # dice_3 = torch.stack(dices_class3).mean()
+
+    # print(f'IOU class 1: {iou_1}')
+    # print(f'IOU class 2: {iou_2}')
+    # print(f'IOU class 3: {iou_3}')
+    # print(f'DICE class 1: {dice_1}')
+    # print(f'DICE class 2: {dice_2}')
+    # print(f'DICE class 3: {dice_3}')
     
-    val = 100
-    train = len(dataset) - val
-    train_set, val_set = random_split(dataset, [train, val])
-
-    dataloader = DataLoader(val_set, batch_size=8, shuffle=True, num_workers=4)
-
-    ious_class1 = []
-    ious_class2 = []
-    ious_class3 = []
-    dices_class1 = []
-    dices_class2 = []
-    dices_class3 = []
-
-    for i, (x, y) in enumerate(dataloader):
-        print(f'Batch {i+1}')
-        y = y.squeeze(1)
-        print(f'y shape : {y.shape}')
-        output = model(x)
-        print(f'output shape : {output.shape}')
-        ious, dices = compute_metrics(output, y)
-        ious_class1.append(ious[0])
-        ious_class2.append(ious[1])
-        ious_class3.append(ious[2])
-        dices_class1.append(dices[0])
-        dices_class2.append(dices[1])
-        dices_class3.append(dices[2])
-
-    iou_1 = torch.stack(ious_class1).mean()
-    iou_2 = torch.stack(ious_class2).mean()
-    iou_3 = torch.stack(ious_class3).mean()
-    dice_1 = torch.stack(dices_class1).mean()
-    dice_2 = torch.stack(dices_class2).mean()
-    dice_3 = torch.stack(dices_class3).mean()
-
-    print(f'IOU class 1: {iou_1}')
-    print(f'IOU class 2: {iou_2}')
-    print(f'IOU class 3: {iou_3}')
-    print(f'DICE class 1: {dice_1}')
-    print(f'DICE class 2: {dice_2}')
-    print(f'DICE class 3: {dice_3}')
-    
-    
-    # output = F.softmax(output, dim=1)
-    # output = torch.argmax(output, dim=1)
-    # output = output.squeeze().detach().cpu().numpy()
+    output = model(dataset[93][0].unsqueeze(0)) 
+    #output = F.softmax(output, dim=1)
+    output = torch.argmax(output, dim=1)
+    output = output.squeeze().detach().cpu().numpy()
 
 
-    # fig, ax = plt.subplots(1, 3, figsize=(10, 5))
-    # ax[0].imshow(dataset[123][0].permute(1, 2, 0))
-    # ax[1].imshow(dataset[123][1].permute(1, 2, 0))
-    # ax[2].imshow(output)
-    # plt.show()
+    fig, ax = plt.subplots(1, 3, figsize=(10, 5))
+    ax[0].imshow(dataset[93][0].permute(1, 2, 0))
+    ax[1].imshow(dataset[93][1].permute(1, 2, 0))
+    ax[2].imshow(output)
+    plt.show()
 
 
 
