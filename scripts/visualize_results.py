@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import lightning.pytorch as pl
-from model import Unet
+from Unet import Unet
 from torchvision import transforms
 from torchvision.datasets import OxfordIIITPet
 from torch.nn import functional as F
