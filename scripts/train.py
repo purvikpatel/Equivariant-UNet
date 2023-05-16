@@ -82,6 +82,31 @@ def main(args):
         deterministic="warn",
     )
     trainer.fit(model, train_loader, val_loader)
+    log_results(model, val_loader)
+
+
+def log_results(model, val_loader):
+    model.eval()
+    # metrics = []
+    images = []
+    targets = []
+    outputs = []
+    for idx, batch in enumerate(val_loader):
+        if idx == 0:
+            x, y = batch
+            output = model(x)
+            output = torch.argmax(output, dim=1)
+            images.append(x)
+            targets.append(y)
+            outputs.append(output)
+
+    images = torch.cat(images, dim=0)
+    targets = torch.cat(targets, dim=0)
+    outputs = torch.cat(outputs, dim=0)
+
+    wandb.log({"images": [wandb.Image(img) for img in images]})
+    wandb.log({"targets": [wandb.Image(img) for img in targets]})
+    wandb.log({"outputs": [wandb.Image(img) for img in outputs]})
 
 
 if __name__ == "__main__":
