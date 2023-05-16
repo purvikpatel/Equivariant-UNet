@@ -18,4 +18,4 @@ source /home/patel.purvi/miniconda3/bin/activate
 conda activate lightning
 
 python -c'import torch; print(torch.cuda.is_available())'
-python /home/patel.purvi/Equivariant-UNet/scripts/train.py
+python /home/patel.purvi/semantic-segmentation/scripts/train.py
