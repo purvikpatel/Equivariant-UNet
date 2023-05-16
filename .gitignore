@@ -162,3 +162,5 @@ cython_debug/
 
 #wandb
 wandb/
+.vscode/settings.json
+.gitignore

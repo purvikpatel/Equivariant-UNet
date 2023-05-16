@@ -59,7 +59,8 @@ def main(args):
         monitor="val_loss",
         mode="min",
         save_on_train_epoch_end=True,
-        auto_insert_metric_name=True
+        auto_insert_metric_name=True,
+        filename=f'Unet-{{epoch:02d}}-{{val_loss:.2f}}'
     )
     stop_callback = EarlyStopping(
         monitor='val_loss',
@@ -69,7 +70,7 @@ def main(args):
     )
 
     
-    trainer = Trainer(accelerator='auto', max_epochs=40, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback], deterministic=True)
+    trainer = Trainer(accelerator='auto', max_epochs=40, logger=wand_logger, callbacks=[checkpoint_callback, stop_callback], deterministic='warn')
     trainer.fit(model, train_loader, val_loader)
 
 
