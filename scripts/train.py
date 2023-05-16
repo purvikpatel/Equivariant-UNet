@@ -82,10 +82,10 @@ def main(args):
         deterministic="warn",
     )
     trainer.fit(model, train_loader, val_loader)
-    log_results(model, val_loader)
+    log_results(model, val_loader, wand_logger)
 
 
-def log_results(model, val_loader):
+def log_results(model, val_loader, wand_logger):
     model.eval()
     # metrics = []
     images = []
@@ -104,9 +104,9 @@ def log_results(model, val_loader):
     targets = torch.cat(targets, dim=0)
     outputs = torch.cat(outputs, dim=0)
 
-    wandb.log({"images": [wandb.Image(img) for img in images]})
-    wandb.log({"targets": [wandb.Image(img) for img in targets]})
-    wandb.log({"outputs": [wandb.Image(img) for img in outputs]})
+    wand_logger.log_image(key="images", images=[img for img in images])
+    wand_logger.log_image(key="targets", images=[img for img in targets])
+    wand_logger.log_image(key="outputs", images=[img for img in outputs])
 
 
 if __name__ == "__main__":
