@@ -103,7 +103,7 @@ def log_results(model, val_loader, wand_logger):
     images = torch.cat(images, dim=0)
     targets = torch.cat(targets, dim=0)
     outputs = torch.cat(outputs, dim=0)
-    targets = targets.float()
+    targets = targets.long()
 
     wand_logger.log_image(key="images", images=[img for img in images])
     wand_logger.log_image(key="targets", images=[img for img in targets])
