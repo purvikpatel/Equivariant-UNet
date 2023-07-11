@@ -12,7 +12,7 @@ from escnn import gspaces
 
 
 
-class EquivaraintUnet(pl.LightningModule):
+class EquivariantUnet(pl.LightningModule):
     def __init__(self, num_classes, N=4, reflections=False, bilinear=True, dropout=0.2, dropout_type='Field'):
         super().__init__()
         self.save_hyperparameters()

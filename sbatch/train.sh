@@ -15,7 +15,7 @@
 
 module load cuda/11.7
 source /home/patel.purvi/miniconda3/bin/activate
-conda activate lightning
+conda activate gdl
 
 python -c'import torch; print(torch.cuda.is_available())'
 python /home/patel.purvi/semantic-segmentation/scripts/train.py
