@@ -21,11 +21,11 @@ from lightning.pytorch import seed_everything
 def weights_init_kaiming(m):
     classname = m.__class__.__name__
     # print(classname)
-    if classname.find("Conv") != -1:
+    if classname.find("Conv") != -1 and classname.find("R2Conv") == -1:
         init.kaiming_normal_(m.weight.data, a=0, mode="fan_in")
     elif classname.find("Linear") != -1:
         init.kaiming_normal_(m.weight.data, a=0, mode="fan_in")
-    elif classname.find("BatchNorm") != -1:
+    elif classname.find("BatchNorm") != -1 and classname.find("InnerBatchNorm") == -1:
         init.normal_(m.weight.data, 1.0, 0.02)
         init.constant_(m.bias.data, 0.0)
 

@@ -145,7 +145,7 @@ class EquivariantUnet(pl.LightningModule):
         x = self.up3(x, x2.tensor)
         x = self.up4(x, x1.tensor)
 
-        return x
+        return self.out(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -189,7 +189,7 @@ class EquivariantUnet(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    model = Unet(3, N=8, bilinear=False, dropout=0.3, reflections=True)
+    model = EquivariantUnet(3, N=8, bilinear=False, dropout=0.3, reflections=True)
     #print(model) 
     model.train()
     x = torch.randn(8, 3, 241, 241)
