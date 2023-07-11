@@ -7,9 +7,13 @@ import torchmetrics.functional as metrics
 import torch
 from utils import *
 
+from escnn import nn as escnn_nn
+from escnn import gspaces
 
-class Unet(pl.LightningModule):
-    def __init__(self, num_classes, bilinear=True, dropout=0.2):
+
+
+class EquivaraintUnet(pl.LightningModule):
+    def __init__(self, num_classes, N=4, reflections=False, bilinear=True, dropout=0.2, dropout_type='Field'):
         super().__init__()
         self.save_hyperparameters()
 
@@ -18,6 +22,37 @@ class Unet(pl.LightningModule):
         self.dropout = dropout
         self.ious = []
         self.dice_scores = []
+        self.N = N
+
+        if reflections and N == 1:
+            self.r2_act = gspaces.flip2dOnR2()
+        
+        elif reflections:
+            self.r2_act = gspaces.flipRot2dOnR2(N=N)
+        
+        else:
+            self.r2_act = gspaces.rot2dOnR2(N=N)
+
+
+        in_type = escnn_nn.FieldType(self.r2_act, 3*[self.r2_act.trivial_repr])  # 3 channels
+		
+        self.input_type = in_type
+
+        def eq_conv_block(in_type, out_type, dropout=self.dropout, dropout_type='Field'):
+            block = escnn_nn.SequentialModule(
+				escnn_nn.R2Conv(in_type, out_type, kernel_size=3, padding=1),
+				escnn_nn.InnerBatchNorm(out_type),
+				escnn_nn.ReLU(out_type, inplace=True),
+				escnn_nn.R2Conv(out_type, out_type, kernel_size=3, padding=1),
+				escnn_nn.InnerBatchNorm(out_type),
+				escnn_nn.ReLU(out_type, inplace=True),
+            )
+            if dropout:
+                if dropout_type == 'Field':
+                    block.add_module("dropout", escnn_nn.FieldDropout(out_type, dropout))
+                elif dropout_type == 'Point':
+                    block.add_module("dropout", escnn_nn.PointwiseDropout(out_type, dropout))
+            return block
 
         def conv_block(in_channels, out_channels, dropout=self.dropout):
             block = nn.Sequential(
@@ -32,8 +67,8 @@ class Unet(pl.LightningModule):
                 block.add_module("dropout", nn.Dropout2d(dropout))
             return block
 
-        def down_conv(in_channels, out_channels):
-            return nn.Sequential(nn.MaxPool2d(2), conv_block(in_channels, out_channels))
+        def down_conv(in_type, out_type):
+            return escnn_nn.SequentialModule(escnn_nn.PointwiseMaxPool(in_type, 2, padding=1), eq_conv_block(in_type, out_type))
 
         class up_conv(nn.Module):
             def __init__(self, in_channels, out_channels, bilinear=True):
@@ -60,11 +95,35 @@ class Unet(pl.LightningModule):
                 x = torch.cat([x2, x1], dim=1)
                 return self.conv(x)
 
-        self.conv1 = conv_block(3, 64)
-        self.down1 = down_conv(64, 128)
-        self.down2 = down_conv(128, 256)
-        self.down3 = down_conv(256, 512)
-        self.down4 = down_conv(512, 512)
+        
+        x = self.r2_act.regular_repr.size #size of the regular representation 
+
+        out_type = escnn_nn.FieldType(self.r2_act, (64 // x)*[self.r2_act.regular_repr]) 
+        
+        self.conv1 = eq_conv_block(in_type, out_type)
+        in_type = out_type
+        out_type = escnn_nn.FieldType(self.r2_act, (128 // x)*[self.r2_act.regular_repr])
+        self.down1 = down_conv(in_type, out_type)
+
+        in_type = out_type
+        out_type = escnn_nn.FieldType(self.r2_act, (256 // x)*[self.r2_act.regular_repr])
+        self.down2 = down_conv(in_type, out_type)
+        self.down2_out = out_type
+
+        in_type = out_type
+        out_type = escnn_nn.FieldType(self.r2_act, (512 // x)*[self.r2_act.regular_repr])
+        self.down3 = down_conv(in_type, out_type)
+
+        in_type = out_type
+        out_type = escnn_nn.FieldType(self.r2_act, (512 // x)*[self.r2_act.regular_repr])
+        self.down4 = down_conv(in_type, out_type)
+
+        # self.down1 = down_conv(64, 128)
+        # self.down2 = down_conv(128, 256)
+        # self.down3 = down_conv(256, 512)
+        # self.down4 = down_conv(512, 512)
+
+     
 
         self.up1 = up_conv(1024, 256, self.bilinear)
         self.up2 = up_conv(512, 128, self.bilinear)
@@ -73,18 +132,20 @@ class Unet(pl.LightningModule):
         self.out = nn.Conv2d(64, self.num_classes, 1)
 
     def forward(self, x):
+        x = escnn_nn.GeometricTensor(x, self.input_type)
         x1 = self.conv1(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.down3(x3)
         x5 = self.down4(x4)
 
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
 
-        return self.out(x)
+        x = self.up1(x5.tensor, x4.tensor)
+        x = self.up2(x, x3.tensor)
+        x = self.up3(x, x2.tensor)
+        x = self.up4(x, x1.tensor)
+
+        return x
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -128,7 +189,8 @@ class Unet(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    model = Unet(3, bilinear=False, dropout=0)
-    print(model)
-    x = torch.randn(1, 3, 240, 240)
+    model = Unet(3, N=8, bilinear=False, dropout=0.3, reflections=True)
+    #print(model) 
+    model.train()
+    x = torch.randn(8, 3, 241, 241)
     print(model(x).shape)

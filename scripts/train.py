@@ -5,6 +5,7 @@ import argparse
 
 
 from Unet import Unet
+from EquivariantUnet import EquivariantUnet
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 from lightning.pytorch.loggers import WandbLogger
@@ -32,12 +33,12 @@ def weights_init_kaiming(m):
 def main(args):
     image_transform = transforms.Compose(
         [
-            transforms.Resize((240, 240)),
+            transforms.Resize((241, 241)),
             transforms.ToTensor(),
         ]
     )
     target_transform = transforms.Compose(
-        [transforms.Resize((240, 240)), transforms.PILToTensor()]
+        [transforms.Resize((241, 241)), transforms.PILToTensor()]
     )
     dataset = OxfordIIITPet(
         root="/home/patel.purvi/data/",
@@ -52,7 +53,7 @@ def main(args):
     train_loader = DataLoader(train_set, batch_size=8, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_set, batch_size=8, shuffle=False, num_workers=4)
 
-    model = Unet(num_classes=3, bilinear=True, dropout=0.4)
+    model = EquivariantUnet(num_classes=3, N=8, reflections=True, bilinear=True, dropout=0.4)
 
     model.apply(weights_init_kaiming)
     wand_logger = WandbLogger(project="Equivariant-Unet")
